@@ -9,4 +9,7 @@ config SRCARCH
 	string
 	option env="SRCARCH"
 
+config AMP
+	bool "Enable AMP"
+
 source "arch/$SRCARCH/Kconfig"
