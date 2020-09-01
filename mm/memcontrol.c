@@ -3953,6 +3953,23 @@ out_kfree:
 	return ret;
 }
 
+#ifdef CONFIG_AMP
+static u64 memcg_migration_policy_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	return memcg->migration_policy;
+}
+
+static int memcg_migration_policy_write(struct cgroup_subsys_state *css,
+		struct cftype *cft, u64 val)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	memcg->migration_policy = val;
+	return 0;
+}
+#endif /* CONFIG_AMP */
+
 static struct cftype mem_cgroup_legacy_files[] = {
 	{
 		.name = "usage_in_bytes",
@@ -4081,6 +4098,13 @@ static struct cftype mem_cgroup_legacy_files[] = {
 		.write = mem_cgroup_reset,
 		.read_u64 = mem_cgroup_read_u64,
 	},
+#ifdef CONFIG_AMP
+	{
+		.name = "migration.policy",
+		.read_u64 = memcg_migration_policy_read,
+		.write_u64 = memcg_migration_policy_write,
+	},
+#endif /* CONFIG_AMP */
 	{ },	/* terminate */
 };
 
