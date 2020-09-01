@@ -1057,6 +1057,52 @@ static int do_exchange_page_list(struct mm_struct *mm,
 	return err;
 }
 
+int do_exchange_page_list_no_putback(
+		struct list_head *from_pagelist,
+		struct list_head *to_pagelist)
+{
+	int err;
+	struct exchange_page_info *one_pair;
+	LIST_HEAD(exchange_page_list);
+
+	while (!list_empty(from_pagelist)) {
+		struct page *from_page, *to_page;
+
+		from_page = list_first_entry_or_null(from_pagelist, struct page, lru);
+		to_page = list_first_entry_or_null(to_pagelist, struct page, lru);
+
+		if (!from_page || !to_page)
+			break;
+
+		one_pair = kzalloc(sizeof(struct exchange_page_info), GFP_ATOMIC);
+		if (!one_pair) {
+			err = -ENOMEM;
+			break;
+		}
+
+		list_del(&from_page->lru);
+		list_del(&to_page->lru);
+
+		one_pair->from_page = from_page;
+		one_pair->to_page = to_page;
+
+		list_add_tail(&one_pair->list, &exchange_page_list);
+	}
+
+	err = exchange_pages(&exchange_page_list, MIGRATE_SYNC, MR_SYSCALL);
+
+	while (!list_empty(&exchange_page_list)) {
+		struct exchange_page_info *one_pair =
+			list_first_entry(&exchange_page_list,
+					struct exchange_page_info, list);
+
+		list_del(&one_pair->list);
+		kfree(one_pair);
+	}
+
+	return err;
+}
+
 static int add_page_for_exchange(struct mm_struct *mm,
 		unsigned long from_addr, unsigned long to_addr,
 		struct list_head *from_pagelist, struct list_head *to_pagelist,

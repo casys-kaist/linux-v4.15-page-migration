@@ -21,4 +21,7 @@ struct exchange_page_info {
 
 int exchange_pages(struct list_head *exchange_list,
         enum migrate_mode mode, int reason);
+int do_exchange_page_list_no_putback(
+		struct list_head *from_pagelist,
+		struct list_head *to_pagelist);
 #endif /* _LINUX_EXCHANGE_H */
