@@ -46,6 +46,9 @@
 #include <linux/page_owner.h>
 #include <linux/sched/mm.h>
 #include <linux/ptrace.h>
+#ifdef CONFIG_AMP
+#include <linux/page_migration.h>
+#endif /* CONFIG_AMP */
 
 #include <asm/tlbflush.h>
 
@@ -257,18 +260,36 @@ static bool remove_migration_pte(struct page *page, struct vm_area_struct *vma,
 			pte = pte_mkhuge(pte);
 			pte = arch_make_huge_pte(pte, vma, new, 0);
 			set_huge_pte_at(vma->vm_mm, pvmw.address, pvmw.pte, pte);
-			if (PageAnon(new))
+			if (PageAnon(new)) {
 				hugepage_add_anon_rmap(new, vma, pvmw.address);
-			else
+#ifdef CONFIG_AMP
+				if (new != old) {
+					if (page_to_nid(new) == FAST_NODE_ID) {
+						count_vm_numa_event(NUMA_PAGE_MIGRATE_SLOW_TO_FAST);
+					} else {
+						count_vm_numa_event(NUMA_PAGE_MIGRATE_FAST_TO_SLOW);
+					}
+				}
+#endif /* CONFIG_AMP */
+			} else
 				page_dup_rmap(new, true);
 		} else
 #endif
 		{
 			set_pte_at(vma->vm_mm, pvmw.address, pvmw.pte, pte);
 
-			if (PageAnon(new))
+			if (PageAnon(new)) {
 				page_add_anon_rmap(new, vma, pvmw.address, false);
-			else
+#ifdef CONFIG_AMP
+				if (new != old) {
+					if (page_to_nid(new) == FAST_NODE_ID) {
+						count_vm_numa_event(NUMA_PAGE_MIGRATE_SLOW_TO_FAST);
+					} else {
+						count_vm_numa_event(NUMA_PAGE_MIGRATE_FAST_TO_SLOW);
+					}
+				}
+#endif /* CONFIG_AMP */
+			} else
 				page_add_file_rmap(new, false);
 		}
 		if (vma->vm_flags & VM_LOCKED && !PageTransCompound(new))
@@ -752,6 +773,7 @@ int migrate_page(struct address_space *mapping,
 		migrate_page_copy(newpage, page);
 	else
 		migrate_page_states(newpage, page);
+
 	return MIGRATEPAGE_SUCCESS;
 }
 EXPORT_SYMBOL(migrate_page);
@@ -1972,6 +1994,11 @@ int migrate_misplaced_page(struct page *page, struct vm_area_struct *vma,
 	nr_remaining = migrate_pages(&migratepages, alloc_misplaced_dst_page,
 				     NULL, node, MIGRATE_ASYNC,
 				     MR_NUMA_MISPLACED);
+#ifdef CONFIG_AMP
+	nr_remaining = migrate_pages(&migratepages, alloc_misplaced_dst_page,
+				     NULL, node, MIGRATE_ASYNC,
+					 MR_PAGE_MIGRATION_SLOW_TO_FAST);
+#endif /* CONFIG_AMP */
 	if (nr_remaining) {
 		if (!list_empty(&migratepages)) {
 			list_del(&page->lru);
@@ -1980,8 +2007,9 @@ int migrate_misplaced_page(struct page *page, struct vm_area_struct *vma,
 			putback_lru_page(page);
 		}
 		isolated = 0;
-	} else
+	} else {
 		count_vm_numa_event(NUMA_PAGE_MIGRATE);
+	}
 	BUG_ON(!list_empty(&migratepages));
 	return isolated;
 
@@ -2087,6 +2115,9 @@ int migrate_misplaced_transhuge_page(struct mm_struct *mm,
 	mlock_migrate_page(new_page, page);
 	page_remove_rmap(page, true);
 	set_page_owner_migrate_reason(new_page, MR_NUMA_MISPLACED);
+#ifdef CONFIG_AMP
+	set_page_owner_migrate_reason(new_page, MR_PAGE_MIGRATION_SLOW_TO_FAST);
+#endif /* CONFIG_AMP */
 
 	spin_unlock(ptl);
 	/*
@@ -2106,6 +2137,9 @@ int migrate_misplaced_transhuge_page(struct mm_struct *mm,
 
 	count_vm_events(PGMIGRATE_SUCCESS, HPAGE_PMD_NR);
 	count_vm_numa_events(NUMA_PAGE_MIGRATE, HPAGE_PMD_NR);
+#ifdef CONFIG_AMP
+	count_vm_numa_events(NUMA_PAGE_MIGRATE_SLOW_TO_FAST, HPAGE_PMD_NR);
+#endif /* CONFIG_AMP */
 
 	mod_node_page_state(page_pgdat(page),
 			NR_ISOLATED_ANON + page_lru,

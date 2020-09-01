@@ -1216,6 +1216,10 @@ const char * const vmstat_text[] = {
 	"numa_hint_faults_local",
 	"numa_pages_migrated",
 #endif
+#ifdef CONFIG_AMP
+	"numa_pages_migrated_slow_to_fast",
+	"numa_pages_migrated_fast_to_slow",
+#endif /* CONFIG_AMP */
 #ifdef CONFIG_MIGRATION
 	"pgmigrate_success",
 	"pgmigrate_fail",

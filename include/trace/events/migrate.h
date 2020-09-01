@@ -13,6 +13,7 @@
 	EMe(MIGRATE_SYNC,	"MIGRATE_SYNC")
 
 
+#ifndef CONFIG_AMP
 #define MIGRATE_REASON						\
 	EM( MR_COMPACTION,	"compaction")			\
 	EM( MR_MEMORY_FAILURE,	"memory_failure")		\
@@ -21,6 +22,18 @@
 	EM( MR_MEMPOLICY_MBIND,	"mempolicy_mbind")		\
 	EM( MR_NUMA_MISPLACED,	"numa_misplaced")		\
 	EMe(MR_CMA,		"cma")
+#else /* CONFIG_AMP */
+#define MIGRATE_REASON						\
+	EM( MR_COMPACTION,	"compaction")			\
+	EM( MR_MEMORY_FAILURE,	"memory_failure")		\
+	EM( MR_MEMORY_HOTPLUG,	"memory_hotplug")		\
+	EM( MR_SYSCALL,		"syscall_or_cpuset")		\
+	EM( MR_MEMPOLICY_MBIND,	"mempolicy_mbind")		\
+	EM( MR_NUMA_MISPLACED,	"numa_misplaced")		\
+	EM( MR_CMA,		"cma") \
+	EM( MR_PAGE_MIGRATION_SLOW_TO_FAST, "page_migration_slow_to_fast")	\
+	EMe( MR_PAGE_MIGRATION_FAST_TO_SLOW, "page_migration_fast_to_slow")
+#endif /* CONFIG_AMP */
 
 /*
  * First define the enums in the above macros to be exported to userspace
