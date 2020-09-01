@@ -266,6 +266,11 @@ struct mem_cgroup {
 
 	unsigned int fast_memory_ratio;
 	unsigned int migration_policy;
+
+	struct {
+		unsigned int act_scan_ratio;
+		unsigned int inact_scan_ratio;
+	} modified_lru_lists;
 #endif /* CONFIG_AMP */
 
 	struct mem_cgroup_per_node *nodeinfo[0];
@@ -679,6 +684,35 @@ static inline unsigned long lruvec_size_memcg_node(enum lru_list lru,
 
 	VM_BUG_ON(lru < 0 || lru >= NR_LRU_LISTS);
 	return mem_cgroup_node_nr_lru_pages(memcg, nid, BIT(lru));
+}
+
+static inline unsigned long active_inactive_size_memcg_node(struct mem_cgroup *memcg,
+		int nid, bool active)
+{
+	unsigned long val = 0;
+	enum lru_list lru;
+
+	for_each_evictable_lru(lru) {
+		if ((active  && is_active_lru(lru)) ||
+			(!active && !is_active_lru(lru)))
+			val += mem_cgroup_node_nr_lru_pages(memcg, nid, BIT(lru));
+	}
+
+	return val;
+}
+
+static inline unsigned long memcg_size_node(struct mem_cgroup *memcg, int nid)
+{
+	unsigned long val = 0;
+	int i;
+
+	if (nid == MAX_NUMNODES)
+		return val;
+
+	for (i = 0; i < NR_LRU_LISTS; i++)
+		val += mem_cgroup_node_nr_lru_pages(memcg, nid, BIT(i));
+
+	return val;
 }
 
 #else /* CONFIG_MEMCG */

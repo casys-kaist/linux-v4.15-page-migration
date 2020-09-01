@@ -8,6 +8,7 @@ enum migration_policy {
 	MIG_POLICY_NOP = 0,
 	MIG_POLICY_PURE_RANDOM,
 	MIG_POLICY_PSEUDO_RANDOM,
+	MIG_POLICY_MODIFIED_LRU_LISTS,
 	NUM_MIG_POLICIES
 };
 
@@ -29,6 +30,10 @@ void do_migrate_with_metric(struct mem_cgroup *memcg,
 		int (*sort) (void *, struct list_head *, struct list_head *));
 void do_migrate_pure_random(struct mem_cgroup *memcg);
 void do_migrate_pseudo_random(struct mem_cgroup *memcg);
+void do_migrate_modified_lru_lists(struct mem_cgroup *memcg);
+
+// hotness tracking
+void shrink_lists(struct mem_cgroup *memcg);
 
 // page migration
 struct page *new_node_page(struct page *page, unsigned long node, int **x);
