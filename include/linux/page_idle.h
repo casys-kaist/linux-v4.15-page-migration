@@ -137,4 +137,9 @@ static inline void clear_page_idle(struct page *page)
 
 #endif /* CONFIG_IDLE_PAGE_TRACKING */
 
+extern struct page *page_idle_get_page(unsigned long pfn);
+extern bool page_idle_clear_pte_refs_one(struct page *page,
+					struct vm_area_struct *vma,
+					unsigned long addr, void *arg);
+extern void page_idle_clear_pte_refs(struct page *page);
 #endif /* _LINUX_MM_PAGE_IDLE_H */
