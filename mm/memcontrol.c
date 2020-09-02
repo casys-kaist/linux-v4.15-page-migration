@@ -4024,6 +4024,9 @@ static int memcg_migration_do_scan_write(struct cgroup_subsys_state *css,
 	if (memcg->migration_policy == MIG_POLICY_MODIFIED_LRU_LISTS) {
 		shrink_lists(memcg);
 	}
+	if (memcg->migration_policy == MIG_POLICY_LRU) {
+		update_age(memcg);
+	}
 	return 0;
 }
 
@@ -4037,6 +4040,8 @@ static int memcg_migration_do_migrate_write(struct cgroup_subsys_state *css,
 		do_migrate_pseudo_random(memcg);
 	if (memcg->migration_policy == MIG_POLICY_MODIFIED_LRU_LISTS)
 		do_migrate_modified_lru_lists(memcg);
+	if (memcg->migration_policy == MIG_POLICY_LRU)
+		do_migrate_lru(memcg);
 	memcg->epoch++;
 	return 0;
 }

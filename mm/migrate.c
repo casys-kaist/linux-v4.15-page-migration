@@ -774,6 +774,8 @@ int migrate_page(struct address_space *mapping,
 	else
 		migrate_page_states(newpage, page);
 
+	EXCHANGE_PAGE_FIELD(newpage, page, age);
+
 	return MIGRATEPAGE_SUCCESS;
 }
 EXPORT_SYMBOL(migrate_page);

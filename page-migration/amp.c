@@ -1,4 +1,5 @@
 #include <linux/memcontrol.h>
+#include <linux/page_idle.h>
 #include <linux/list_sort.h>
 #include <linux/migrate.h>
 #include <linux/page_migration.h>
@@ -19,6 +20,13 @@ static int page_pseudo_random_cmp(void *priv, struct list_head *a, struct list_h
 	struct page *page_b = container_of(b, struct page, lru);
 	int nid_b = pfn_to_nid(page_to_pfn(page_b));
 	return nid_b == FAST_NODE_ID;
+}
+
+static int page_age_cmp(void *priv, struct list_head *a, struct list_head *b)
+{
+	struct page *page_a = container_of(a, struct page, lru);
+	struct page *page_b = container_of(b, struct page, lru);
+	return page_a->age > page_b->age;
 }
 
 void do_migrate_with_metric(struct mem_cgroup *memcg,
@@ -65,4 +73,9 @@ void do_migrate_pure_random(struct mem_cgroup *memcg)
 void do_migrate_pseudo_random(struct mem_cgroup *memcg)
 {
 	do_migrate_with_metric(memcg, page_pseudo_random_cmp);
+}
+
+void do_migrate_lru(struct mem_cgroup *memcg)
+{
+	do_migrate_with_metric(memcg, page_age_cmp);
 }

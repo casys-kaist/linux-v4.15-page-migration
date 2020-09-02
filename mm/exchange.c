@@ -23,6 +23,9 @@
 #include <linux/fs.h> /* buffer_migrate_page  */
 #include <linux/backing-dev.h>
 #include <linux/sched/mm.h>
+#ifdef CONFIG_AMP
+#include <linux/page_migration.h>
+#endif /* CONFIG_AMP */
 
 #include "internal.h"
 
@@ -563,6 +566,8 @@ exchange_mappings:
 				(!page_has_private(from_page) && !page_has_private(to_page))));
 
 	exchange_page_flags(to_page, from_page);
+
+	EXCHANGE_PAGE_FIELD(to_page, from_page, age);
 
 	pr_dump_page(from_page, "after exchange: from ");
 	pr_dump_page(to_page, "after exchange: to ");

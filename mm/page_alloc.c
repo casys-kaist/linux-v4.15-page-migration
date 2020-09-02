@@ -67,6 +67,9 @@
 #include <linux/ftrace.h>
 #include <linux/lockdep.h>
 #include <linux/nmi.h>
+#ifdef CONFIG_AMP
+#include <linux/page_migration.h>
+#endif /* CONFIG_AMP */
 
 #include <asm/sections.h>
 #include <asm/tlbflush.h>
@@ -1070,6 +1073,10 @@ static __always_inline bool free_pages_prepare(struct page *page,
 	kernel_map_pages(page, 1 << order, 0);
 	kasan_free_pages(page, order);
 
+#ifdef CONFIG_AMP
+	page->age = 0;
+#endif /* CONFIG_AMP */
+
 	return true;
 }
 
@@ -1818,6 +1825,10 @@ static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags
 		set_page_pfmemalloc(page);
 	else
 		clear_page_pfmemalloc(page);
+
+#ifdef CONFIG_AMP
+	page->age = 0;
+#endif /* CONFIG_AMP */
 }
 
 /*
