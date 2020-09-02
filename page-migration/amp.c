@@ -26,14 +26,20 @@ static int page_age_cmp(void *priv, struct list_head *a, struct list_head *b)
 {
 	struct page *page_a = container_of(a, struct page, lru);
 	struct page *page_b = container_of(b, struct page, lru);
-	return page_a->age > page_b->age;
+	if (page_a->age != page_b->age)
+		return page_a->age > page_b->age;
+	else
+		return page_a->access_frequency > page_b->access_frequency;
 }
 
 static int page_access_frequency_cmp(void *priv, struct list_head *a, struct list_head *b)
 {
 	struct page *page_a = container_of(a, struct page, lru);
 	struct page *page_b = container_of(b, struct page, lru);
-	return page_a->access_frequency < page_b->access_frequency;
+	if (page_a->access_frequency != page_b->access_frequency)
+		return page_a->access_frequency < page_b->access_frequency;
+	else
+		return page_a->age < page_b->age;
 }
 
 void do_migrate_with_metric(struct mem_cgroup *memcg,
