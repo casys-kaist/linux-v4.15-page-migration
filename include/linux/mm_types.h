@@ -218,6 +218,9 @@ struct page {
 	int age;
 	DECLARE_BITMAP(access_hist, ACCESS_HIST_SIZE);
 	int access_frequency;
+
+	int lru_nid;
+	int lfu_nid;
 #endif /* CONFIG_AMP */
 }
 /*

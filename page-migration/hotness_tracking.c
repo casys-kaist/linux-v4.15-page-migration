@@ -24,6 +24,10 @@ static void __measure_hit_ratio(struct mem_cgroup *memcg,
 				inc_num_fast_memory_hit_pages(memcg, is_huge);
 			else if (nid == SLOW_NODE_ID)
 				inc_num_slow_memory_hit_pages(memcg, is_huge);
+			if (page->lru_nid == FAST_NODE_ID)
+				inc_lru_num_fast_memory_hit_pages(memcg, is_huge);
+			if (page->lfu_nid == FAST_NODE_ID)
+				inc_lfu_num_fast_memory_hit_pages(memcg, is_huge);
 			set_page_idle(page);
 		}
 	}
@@ -79,6 +83,10 @@ static void __update_age_and_access_frequency(struct mem_cgroup *memcg,
 				inc_num_fast_memory_hit_pages(memcg, is_huge);
 			else if (nid == SLOW_NODE_ID)
 				inc_num_slow_memory_hit_pages(memcg, is_huge);
+			if (page->lru_nid == FAST_NODE_ID)
+				inc_lru_num_fast_memory_hit_pages(memcg, is_huge);
+			if (page->lfu_nid == FAST_NODE_ID)
+				inc_lfu_num_fast_memory_hit_pages(memcg, is_huge);
 			set_page_idle(page);
 		}
 		page->access_frequency = bitmap_weight(page->access_hist, ACCESS_HIST_SIZE);

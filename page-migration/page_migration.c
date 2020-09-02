@@ -55,6 +55,11 @@ void meet_fast_memory_ratio(struct mem_cgroup *memcg,
 
 	// remove pages that are in the correct location already
 	list_for_each_entry_safe(page, next, &fast_page_list, lru) {
+		if (migration_policy == MIG_POLICY_LRU)
+			page->lru_nid = FAST_NODE_ID;
+		if (migration_policy == MIG_POLICY_LFU)
+			page->lfu_nid = FAST_NODE_ID;
+
 		if (pfn_to_nid(page_to_pfn(page)) == FAST_NODE_ID) {
 			list_move(&page->lru, page_list);
 		} else {
@@ -63,6 +68,11 @@ void meet_fast_memory_ratio(struct mem_cgroup *memcg,
 		}
 	}
 	list_for_each_entry_safe(page, next, &slow_page_list, lru) {
+		if (migration_policy == MIG_POLICY_LRU)
+			page->lru_nid = SLOW_NODE_ID;
+		if (migration_policy == MIG_POLICY_LFU)
+			page->lfu_nid = SLOW_NODE_ID;
+
 		if (pfn_to_nid(page_to_pfn(page)) == SLOW_NODE_ID) {
 			list_move(&page->lru, page_list);
 		} else {

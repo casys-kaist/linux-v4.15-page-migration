@@ -777,6 +777,8 @@ int migrate_page(struct address_space *mapping,
 	EXCHANGE_PAGE_FIELD(newpage, page, age);
 	EXCHANGE_PAGE_FIELD_BITMAP(newpage, page, access_hist, ACCESS_HIST_SIZE);
 	EXCHANGE_PAGE_FIELD(newpage, page, access_frequency);
+	EXCHANGE_PAGE_FIELD(newpage, page, lru_nid);
+	EXCHANGE_PAGE_FIELD(newpage, page, lfu_nid);
 
 	return MIGRATEPAGE_SUCCESS;
 }

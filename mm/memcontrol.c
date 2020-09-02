@@ -4082,6 +4082,15 @@ static int memcg_migration_do_migrate_write(struct cgroup_subsys_state *css,
 	return 0;
 }
 
+static int memcg_migration_do_migrate_amp_write(struct cgroup_subsys_state *css,
+		struct cftype *cft, u64 val)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	do_migrate_amp(memcg);
+	memcg->epoch++;
+	return 0;
+}
+
 static u64 memcg_migration_stats_num_total_pages_read(struct cgroup_subsys_state *css,
 		struct cftype *cft)
 {
@@ -4419,6 +4428,10 @@ static struct cftype mem_cgroup_legacy_files[] = {
 	{
 		.name = "migration.do.migrate",
 		.write_u64 = memcg_migration_do_migrate_write,
+	},
+	{
+		.name = "migration.do.migrate_amp",
+		.write_u64 = memcg_migration_do_migrate_amp_write,
 	},
 	{
 		.name = "migration.stats.num_total_pages",

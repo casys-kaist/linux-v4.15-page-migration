@@ -1077,6 +1077,9 @@ static __always_inline bool free_pages_prepare(struct page *page,
 	page->age = 0;
 	bitmap_clear(page->access_hist, 0, ACCESS_HIST_SIZE);
 	page->access_frequency = 0;
+
+	page->lru_nid = FAST_NODE_ID;
+	page->lfu_nid = FAST_NODE_ID;
 #endif /* CONFIG_AMP */
 
 	return true;
@@ -1832,6 +1835,9 @@ static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags
 	page->age = 0;
 	bitmap_clear(page->access_hist, 0, ACCESS_HIST_SIZE);
 	page->access_frequency = 0;
+
+	page->lru_nid = FAST_NODE_ID;
+	page->lfu_nid = FAST_NODE_ID;
 #endif /* CONFIG_AMP */
 }
 
