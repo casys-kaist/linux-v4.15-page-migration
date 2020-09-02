@@ -69,6 +69,9 @@
 #include <net/sock.h>
 #include <net/ip.h>
 #include "slab.h"
+#ifdef CONFIG_AMP
+#include <linux/page_migration.h>
+#endif /* CONFIG_AMP */
 
 #include <linux/uaccess.h>
 
@@ -3968,6 +3971,30 @@ static int memcg_migration_policy_write(struct cgroup_subsys_state *css,
 	memcg->migration_policy = val;
 	return 0;
 }
+
+static u64 memcg_migration_fast_memory_ratio_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	return memcg->fast_memory_ratio / 10;
+}
+
+static int memcg_migration_fast_memory_ratio_write(struct cgroup_subsys_state *css,
+		struct cftype *cft, u64 val)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	memcg->fast_memory_ratio = val * 10;
+	return 0;
+}
+static int memcg_migration_do_migrate_write(struct cgroup_subsys_state *css,
+		struct cftype *cft, u64 val)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	if (memcg->migration_policy == MIG_POLICY_PURE_RANDOM)
+		do_migrate_pure_random(memcg);
+	memcg->epoch++;
+	return 0;
+}
 #endif /* CONFIG_AMP */
 
 static struct cftype mem_cgroup_legacy_files[] = {
@@ -4103,6 +4130,15 @@ static struct cftype mem_cgroup_legacy_files[] = {
 		.name = "migration.policy",
 		.read_u64 = memcg_migration_policy_read,
 		.write_u64 = memcg_migration_policy_write,
+	},
+	{
+		.name = "migration.fast_memory_ratio",
+		.read_u64 = memcg_migration_fast_memory_ratio_read,
+		.write_u64 = memcg_migration_fast_memory_ratio_write,
+	},
+	{
+		.name = "migration.do.migrate",
+		.write_u64 = memcg_migration_do_migrate_write,
 	},
 #endif /* CONFIG_AMP */
 	{ },	/* terminate */

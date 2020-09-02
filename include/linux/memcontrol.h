@@ -262,6 +262,9 @@ struct mem_cgroup {
 	spinlock_t event_list_lock;
 
 #ifdef CONFIG_AMP
+	unsigned long epoch;
+
+	unsigned int fast_memory_ratio;
 	unsigned int migration_policy;
 #endif /* CONFIG_AMP */
 
@@ -667,6 +670,16 @@ static inline void count_memcg_event_mm(struct mm_struct *mm,
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 void mem_cgroup_split_huge_fixup(struct page *head);
 #endif
+
+static inline unsigned long lruvec_size_memcg_node(enum lru_list lru,
+		struct mem_cgroup *memcg, int nid)
+{
+	if (nid == MAX_NUMNODES)
+		return 0;
+
+	VM_BUG_ON(lru < 0 || lru >= NR_LRU_LISTS);
+	return mem_cgroup_node_nr_lru_pages(memcg, nid, BIT(lru));
+}
 
 #else /* CONFIG_MEMCG */
 
