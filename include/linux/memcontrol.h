@@ -271,6 +271,47 @@ struct mem_cgroup {
 		unsigned int act_scan_ratio;
 		unsigned int inact_scan_ratio;
 	} modified_lru_lists;
+
+	struct {
+		// number of pages
+		unsigned long num_total_pages;
+		unsigned long num_total_base_pages;
+		unsigned long num_total_huge_pages;
+
+		// page migrations
+		unsigned long num_page_migrations;
+		unsigned long num_page_migrations_fast_to_slow;
+		unsigned long num_page_migrations_slow_to_fast;
+
+		// acessed page ratio
+		unsigned int num_accessed_pages;
+		unsigned int num_accessed_base_pages;
+		unsigned int num_accessed_huge_pages;
+
+		// fast memory hit ratio
+		unsigned long num_fast_memory_hit_pages;
+		unsigned long num_fast_memory_hit_base_pages;
+		unsigned long num_fast_memory_hit_huge_pages;
+
+		struct {
+			unsigned long num_fast_memory_hit_pages;
+			unsigned long num_fast_memory_hit_base_pages;
+			unsigned long num_fast_memory_hit_huge_pages;
+		} lru;
+
+		struct {
+			unsigned long num_fast_memory_hit_pages;
+			unsigned long num_fast_memory_hit_base_pages;
+			unsigned long num_fast_memory_hit_huge_pages;
+		} lfu;
+
+		struct {
+			unsigned long num_fast_memory_hit_pages;
+			unsigned long num_fast_memory_miss_pages;
+			unsigned long num_slow_memory_hit_pages;
+			unsigned long num_slow_memory_miss_pages;
+		} numa;
+	} stats;
 #endif /* CONFIG_AMP */
 
 	struct mem_cgroup_per_node *nodeinfo[0];

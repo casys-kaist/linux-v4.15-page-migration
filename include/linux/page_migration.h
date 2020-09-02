@@ -43,6 +43,7 @@ void isolate_all_lru_pages(pg_data_t *pgdat, struct mem_cgroup *memcg,
 		unsigned long *num_isolated_base_pages, unsigned long *num_isolated_huge_pages);
 
 // hotness tracking
+void measure_fast_memory_hit_ratio(struct mem_cgroup *memcg);
 void shrink_lists(struct mem_cgroup *memcg);
 void update_age_and_access_frequency(struct mem_cgroup *memcg);
 
@@ -60,5 +61,27 @@ struct page *new_node_page(struct page *page, unsigned long node, int **x);
 void meet_fast_memory_ratio(struct mem_cgroup *memcg,
 		unsigned long num_pages, struct list_head *page_list, bool is_huge,
 		unsigned int migration_policy, bool migrate);
+
+// stats
+void add_num_total_pages(struct mem_cgroup *memcg,
+		unsigned long num_pages, bool is_huge);
+void inc_num_page_migrations_slow_to_fast(struct mem_cgroup *memcg,
+		bool is_huge);
+void inc_num_page_migrations_fast_to_slow(struct mem_cgroup *memcg,
+		bool is_huge);
+void inc_num_accessed_pages(struct mem_cgroup *memcg,
+		bool is_huge);
+void inc_num_fast_memory_hit_pages(struct mem_cgroup *memcg,
+		bool is_huge);
+void inc_num_fast_memory_miss_pages(struct mem_cgroup *memcg,
+		bool is_huge);
+void inc_num_slow_memory_hit_pages(struct mem_cgroup *memcg,
+		bool is_huge);
+void inc_num_slow_memory_miss_pages(struct mem_cgroup *memcg,
+		bool is_huge);
+void inc_lru_num_fast_memory_hit_pages(struct mem_cgroup *memcg,
+		bool is_huge);
+void inc_lfu_num_fast_memory_hit_pages(struct mem_cgroup *memcg,
+		bool is_huge);
 
 #endif	/* __PAGE_MIGRATION_H__ */

@@ -3964,11 +3964,39 @@ static u64 memcg_migration_policy_read(struct cgroup_subsys_state *css,
 	return memcg->migration_policy;
 }
 
+static void reset_migration_stats(struct mem_cgroup *memcg)
+{
+	memcg->stats.num_total_pages = 0;
+	memcg->stats.num_total_base_pages = 0;
+	memcg->stats.num_total_huge_pages = 0;
+
+	memcg->stats.num_page_migrations = 0;
+	memcg->stats.num_page_migrations_fast_to_slow = 0;
+	memcg->stats.num_page_migrations_slow_to_fast = 0;
+
+	memcg->stats.num_accessed_pages = 0;
+	memcg->stats.num_accessed_base_pages = 0;
+	memcg->stats.num_accessed_huge_pages = 0;
+
+	memcg->stats.num_fast_memory_hit_pages = 0;
+	memcg->stats.num_fast_memory_hit_base_pages = 0;
+	memcg->stats.num_fast_memory_hit_huge_pages = 0;
+
+	memcg->stats.lru.num_fast_memory_hit_pages = 0;
+	memcg->stats.lru.num_fast_memory_hit_base_pages = 0;
+	memcg->stats.lru.num_fast_memory_hit_huge_pages = 0;
+
+	memcg->stats.lfu.num_fast_memory_hit_pages = 0;
+	memcg->stats.lfu.num_fast_memory_hit_base_pages = 0;
+	memcg->stats.lfu.num_fast_memory_hit_huge_pages = 0;
+}
+
 static int memcg_migration_policy_write(struct cgroup_subsys_state *css,
 		struct cftype *cft, u64 val)
 {
 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
 	memcg->migration_policy = val;
+	reset_migration_stats(memcg);
 	return 0;
 }
 
@@ -4021,7 +4049,12 @@ static int memcg_migration_do_scan_write(struct cgroup_subsys_state *css,
 		struct cftype *cft, u64 val)
 {
 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	if ((memcg->migration_policy == MIG_POLICY_PURE_RANDOM)
+            || (memcg->migration_policy == MIG_POLICY_PSEUDO_RANDOM)){
+		measure_fast_memory_hit_ratio(memcg);
+	}
 	if (memcg->migration_policy == MIG_POLICY_MODIFIED_LRU_LISTS) {
+		measure_fast_memory_hit_ratio(memcg);
 		shrink_lists(memcg);
 	}
 	if ((memcg->migration_policy == MIG_POLICY_LRU)
@@ -4046,6 +4079,186 @@ static int memcg_migration_do_migrate_write(struct cgroup_subsys_state *css,
 	if (memcg->migration_policy == MIG_POLICY_LFU)
 		do_migrate_lfu(memcg);
 	memcg->epoch++;
+	return 0;
+}
+
+static u64 memcg_migration_stats_num_total_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_total_pages;
+	memcg->stats.num_total_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_total_base_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_total_base_pages;
+	memcg->stats.num_total_base_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_total_huge_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_total_huge_pages;
+	memcg->stats.num_total_huge_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_page_migrations_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_page_migrations;
+	memcg->stats.num_page_migrations = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_page_migrations_fast_to_slow_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_page_migrations_fast_to_slow;
+	memcg->stats.num_page_migrations_fast_to_slow = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_page_migrations_slow_to_fast_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_page_migrations_slow_to_fast;
+	memcg->stats.num_page_migrations_slow_to_fast = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_accessed_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_accessed_pages;
+	memcg->stats.num_accessed_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_accessed_base_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_accessed_base_pages;
+	memcg->stats.num_accessed_base_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_accessed_huge_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_accessed_huge_pages;
+	memcg->stats.num_accessed_huge_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_fast_memory_hit_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_fast_memory_hit_pages;
+	memcg->stats.num_fast_memory_hit_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_fast_memory_hit_base_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_fast_memory_hit_base_pages;
+	memcg->stats.num_fast_memory_hit_base_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_num_fast_memory_hit_huge_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.num_fast_memory_hit_huge_pages;
+	memcg->stats.num_fast_memory_hit_huge_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_lru_num_fast_memory_hit_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.lru.num_fast_memory_hit_pages;
+	memcg->stats.lru.num_fast_memory_hit_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_lru_num_fast_memory_hit_base_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.lru.num_fast_memory_hit_base_pages;
+	memcg->stats.lru.num_fast_memory_hit_base_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_lru_num_fast_memory_hit_huge_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.lru.num_fast_memory_hit_huge_pages;
+	memcg->stats.lru.num_fast_memory_hit_huge_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_lfu_num_fast_memory_hit_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.lfu.num_fast_memory_hit_pages;
+	memcg->stats.lfu.num_fast_memory_hit_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_lfu_num_fast_memory_hit_base_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.lfu.num_fast_memory_hit_base_pages;
+	memcg->stats.lfu.num_fast_memory_hit_base_pages = 0;
+	return val;
+}
+
+static u64 memcg_migration_stats_lfu_num_fast_memory_hit_huge_pages_read(struct cgroup_subsys_state *css,
+		struct cftype *cft)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+	unsigned long val = memcg->stats.lfu.num_fast_memory_hit_huge_pages;
+	memcg->stats.lfu.num_fast_memory_hit_huge_pages = 0;
+	return val;
+}
+
+static int memcg_migration_stats_hit_miss_read(struct seq_file *sf, void *v)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(sf));
+
+	seq_printf(sf, "%lu,%lu,%lu,%lu\n",
+			memcg->stats.numa.num_fast_memory_hit_pages,
+			memcg->stats.numa.num_fast_memory_miss_pages,
+			memcg->stats.numa.num_slow_memory_hit_pages,
+			memcg->stats.numa.num_slow_memory_miss_pages);
+
+	memcg->stats.numa.num_fast_memory_hit_pages = 0;
+	memcg->stats.numa.num_fast_memory_miss_pages = 0;
+	memcg->stats.numa.num_slow_memory_hit_pages = 0;
+	memcg->stats.numa.num_slow_memory_miss_pages = 0;
+
 	return 0;
 }
 #endif /* CONFIG_AMP */
@@ -4206,6 +4419,82 @@ static struct cftype mem_cgroup_legacy_files[] = {
 	{
 		.name = "migration.do.migrate",
 		.write_u64 = memcg_migration_do_migrate_write,
+	},
+	{
+		.name = "migration.stats.num_total_pages",
+		.read_u64 = memcg_migration_stats_num_total_pages_read,
+	},
+	{
+		.name = "migration.stats.num_total_base_pages",
+		.read_u64 = memcg_migration_stats_num_total_base_pages_read,
+	},
+	{
+		.name = "migration.stats.num_total_huge_pages",
+		.read_u64 = memcg_migration_stats_num_total_huge_pages_read,
+	},
+	{
+		.name = "migration.stats.num_page_migrations",
+		.read_u64 = memcg_migration_stats_num_page_migrations_read,
+	},
+	{
+		.name = "migration.stats.num_page_migrations_fast_to_slow",
+		.read_u64 = memcg_migration_stats_num_page_migrations_fast_to_slow_read,
+	},
+	{
+		.name = "migration.stats.num_page_migrations_slow_to_fast",
+		.read_u64 = memcg_migration_stats_num_page_migrations_slow_to_fast_read,
+	},
+	{
+		.name = "migration.stats.num_accessed_pages",
+		.read_u64 = memcg_migration_stats_num_accessed_pages_read,
+	},
+	{
+		.name = "migration.stats.num_accessed_base_pages",
+		.read_u64 = memcg_migration_stats_num_accessed_base_pages_read,
+	},
+	{
+		.name = "migration.stats.num_accessed_huge_pages",
+		.read_u64 = memcg_migration_stats_num_accessed_huge_pages_read,
+	},
+	{
+		.name = "migration.stats.num_fast_memory_hit_pages",
+		.read_u64 = memcg_migration_stats_num_fast_memory_hit_pages_read,
+	},
+	{
+		.name = "migration.stats.num_fast_memory_hit_base_pages",
+		.read_u64 = memcg_migration_stats_num_fast_memory_hit_base_pages_read,
+	},
+	{
+		.name = "migration.stats.num_fast_memory_hit_huge_pages",
+		.read_u64 = memcg_migration_stats_num_fast_memory_hit_huge_pages_read,
+	},
+	{
+		.name = "migration.stats.lru.num_fast_memory_hit_pages",
+		.read_u64 = memcg_migration_stats_lru_num_fast_memory_hit_pages_read,
+	},
+	{
+		.name = "migration.stats.lru.num_fast_memory_hit_base_pages",
+		.read_u64 = memcg_migration_stats_lru_num_fast_memory_hit_base_pages_read,
+	},
+	{
+		.name = "migration.stats.lru.num_fast_memory_hit_huge_pages",
+		.read_u64 = memcg_migration_stats_lru_num_fast_memory_hit_huge_pages_read,
+	},
+	{
+		.name = "migration.stats.lfu.num_fast_memory_hit_pages",
+		.read_u64 = memcg_migration_stats_lfu_num_fast_memory_hit_pages_read,
+	},
+	{
+		.name = "migration.stats.lfu.num_fast_memory_hit_base_pages",
+		.read_u64 = memcg_migration_stats_lfu_num_fast_memory_hit_base_pages_read,
+	},
+	{
+		.name = "migration.stats.lfu.num_fast_memory_hit_huge_pages",
+		.read_u64 = memcg_migration_stats_lfu_num_fast_memory_hit_huge_pages_read,
+	},
+	{
+		.name = "migration.stats.numa",
+		.seq_show = memcg_migration_stats_hit_miss_read,
 	},
 #endif /* CONFIG_AMP */
 	{ },	/* terminate */

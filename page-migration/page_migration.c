@@ -35,6 +35,9 @@ void meet_fast_memory_ratio(struct mem_cgroup *memcg,
 				  num_target_fast_pages, num_target_slow_pages;
 	struct page *page, *next;
 
+	if (migrate)
+		add_num_total_pages(memcg, num_pages, is_huge);
+
 	// find the number of pages in slow memory
 	num_target_fast_pages = (num_pages * memcg->fast_memory_ratio) / (100 * 10);
 	num_target_slow_pages = num_pages - num_target_fast_pages;
@@ -54,11 +57,17 @@ void meet_fast_memory_ratio(struct mem_cgroup *memcg,
 	list_for_each_entry_safe(page, next, &fast_page_list, lru) {
 		if (pfn_to_nid(page_to_pfn(page)) == FAST_NODE_ID) {
 			list_move(&page->lru, page_list);
+		} else {
+			if (migrate)
+				inc_num_page_migrations_slow_to_fast(memcg, is_huge);
 		}
 	}
 	list_for_each_entry_safe(page, next, &slow_page_list, lru) {
 		if (pfn_to_nid(page_to_pfn(page)) == SLOW_NODE_ID) {
 			list_move(&page->lru, page_list);
+		} else {
+			if (migrate)
+				inc_num_page_migrations_fast_to_slow(memcg, is_huge);
 		}
 	}
 
