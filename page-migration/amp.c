@@ -14,6 +14,13 @@ static int page_pure_random_cmp(void *priv, struct list_head *a, struct list_hea
 	return page_a_rand_val > page_b_rand_val;
 }
 
+static int page_pseudo_random_cmp(void *priv, struct list_head *a, struct list_head *b)
+{
+	struct page *page_b = container_of(b, struct page, lru);
+	int nid_b = pfn_to_nid(page_to_pfn(page_b));
+	return nid_b == FAST_NODE_ID;
+}
+
 void do_migrate_with_metric(struct mem_cgroup *memcg,
 		int (*sort) (void *, struct list_head *, struct list_head *))
 {
@@ -53,4 +60,9 @@ void do_migrate_with_metric(struct mem_cgroup *memcg,
 void do_migrate_pure_random(struct mem_cgroup *memcg)
 {
 	do_migrate_with_metric(memcg, page_pure_random_cmp);
+}
+
+void do_migrate_pseudo_random(struct mem_cgroup *memcg)
+{
+	do_migrate_with_metric(memcg, page_pseudo_random_cmp);
 }

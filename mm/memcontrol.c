@@ -3992,6 +3992,8 @@ static int memcg_migration_do_migrate_write(struct cgroup_subsys_state *css,
 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
 	if (memcg->migration_policy == MIG_POLICY_PURE_RANDOM)
 		do_migrate_pure_random(memcg);
+	if (memcg->migration_policy == MIG_POLICY_PSEUDO_RANDOM)
+		do_migrate_pseudo_random(memcg);
 	memcg->epoch++;
 	return 0;
 }
