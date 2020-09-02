@@ -1075,6 +1075,8 @@ static __always_inline bool free_pages_prepare(struct page *page,
 
 #ifdef CONFIG_AMP
 	page->age = 0;
+	bitmap_clear(page->access_hist, 0, ACCESS_HIST_SIZE);
+	page->access_frequency = 0;
 #endif /* CONFIG_AMP */
 
 	return true;
@@ -1828,6 +1830,8 @@ static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags
 
 #ifdef CONFIG_AMP
 	page->age = 0;
+	bitmap_clear(page->access_hist, 0, ACCESS_HIST_SIZE);
+	page->access_frequency = 0;
 #endif /* CONFIG_AMP */
 }
 

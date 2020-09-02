@@ -214,7 +214,10 @@ struct page {
 #endif
 
 #ifdef CONFIG_AMP
+#define ACCESS_HIST_SIZE 64
 	int age;
+	DECLARE_BITMAP(access_hist, ACCESS_HIST_SIZE);
+	int access_frequency;
 #endif /* CONFIG_AMP */
 }
 /*

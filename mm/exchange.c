@@ -568,6 +568,8 @@ exchange_mappings:
 	exchange_page_flags(to_page, from_page);
 
 	EXCHANGE_PAGE_FIELD(to_page, from_page, age);
+	EXCHANGE_PAGE_FIELD_BITMAP(to_page, from_page, access_hist, ACCESS_HIST_SIZE);
+	EXCHANGE_PAGE_FIELD(to_page, from_page, access_frequency);
 
 	pr_dump_page(from_page, "after exchange: from ");
 	pr_dump_page(to_page, "after exchange: to ");

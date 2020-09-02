@@ -29,6 +29,13 @@ static int page_age_cmp(void *priv, struct list_head *a, struct list_head *b)
 	return page_a->age > page_b->age;
 }
 
+static int page_access_frequency_cmp(void *priv, struct list_head *a, struct list_head *b)
+{
+	struct page *page_a = container_of(a, struct page, lru);
+	struct page *page_b = container_of(b, struct page, lru);
+	return page_a->access_frequency < page_b->access_frequency;
+}
+
 void do_migrate_with_metric(struct mem_cgroup *memcg,
 		int (*sort) (void *, struct list_head *, struct list_head *))
 {
@@ -78,4 +85,9 @@ void do_migrate_pseudo_random(struct mem_cgroup *memcg)
 void do_migrate_lru(struct mem_cgroup *memcg)
 {
 	do_migrate_with_metric(memcg, page_age_cmp);
+}
+
+void do_migrate_lfu(struct mem_cgroup *memcg)
+{
+	do_migrate_with_metric(memcg, page_access_frequency_cmp);
 }
