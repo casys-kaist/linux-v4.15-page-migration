@@ -4270,6 +4270,24 @@ static int memcg_migration_stats_hit_miss_read(struct seq_file *sf, void *v)
 
 	return 0;
 }
+
+static int memcg_migration_hotness_tracking_elapsed_time_read(struct seq_file *sf, void *v)
+{
+	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(sf));
+	ktime_t start, end, dt;
+	s64 dt_us;
+
+	start = ktime_get();
+	update_age_and_access_frequency(memcg);
+	end = ktime_get();
+
+	dt = ktime_sub(end, start);
+	dt_us = ktime_to_us(dt);
+
+	seq_printf(sf, "%lld\n", dt_us);
+
+	return 0;
+}
 #endif /* CONFIG_AMP */
 
 static struct cftype mem_cgroup_legacy_files[] = {
@@ -4508,6 +4526,10 @@ static struct cftype mem_cgroup_legacy_files[] = {
 	{
 		.name = "migration.stats.numa",
 		.seq_show = memcg_migration_stats_hit_miss_read,
+	},
+	{
+		.name = "migration.hotness_tracking.elapsed_time",
+		.seq_show = memcg_migration_hotness_tracking_elapsed_time_read,
 	},
 #endif /* CONFIG_AMP */
 	{ },	/* terminate */
